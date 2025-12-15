@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crash</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --panel:#0f1623;
+      --panel2:#101a2a;
+      --text:#e7eefc;
+      --muted:#9bb0d6;
+      --line:rgba(255,255,255,.08);
+      --good:#2ae98b;
+      --bad:#ff5577;
+      --warn:#ffcc66;
+      --shadow: 0 14px 40px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(99,102,241,.20), transparent 60%),
+                  radial-gradient(1000px 700px at 90% 10%, rgba(34,197,94,.14), transparent 55%),
+                  linear-gradient(180deg, var(--bg), #060910 90%);
+      color:var(--text);
+      padding: 18px 14px 26px;
+    }
+
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border:1px solid var(--line);
+      background: rgba(15,22,35,.70);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
+      line-height:1.1;
+    }
+    .brand .t{
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size: 14px;
+    }
+    .brand .s{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .balance{
+      display:flex; flex-direction:column; align-items:flex-end;
+      gap:2px;
+    }
+    .balance .label{font-size:11px; color:var(--muted)}
+    .balance .val{font-size:16px; font-weight:800}
+
+    .card{
+      margin-top:14px;
+      border:1px solid var(--line);
+      background: rgba(16,26,42,.72);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .stage{
+      padding: 16px 14px 14px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .multibox{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .multi{
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height:1;
+    }
+    .multi small{
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .pill{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 3px rgba(155,176,214,.12);
+    }
+    .dot.live{background: var(--good); box-shadow: 0 0 0 3px rgba(42,233,139,.14);}
+    .dot.down{background: var(--bad); box-shadow: 0 0 0 3px rgba(255,85,119,.14);}
+
+    .msg{
+      margin-top:10px;
+      font-size:13px;
+      color: var(--muted);
+      line-height:1.35;
+      min-height: 18px;
+    }
+
+    .controls{
+      padding: 14px;
+      display:grid;
+      gap: 12px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size: 11px;
+      color: var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .field input{
+      width:100%;
+      border:0;
+      outline:0;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .field input[type="range"]{
+      height: 26px;
+    }
+
+    .btnrow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 13px 12px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor:pointer;
+      transition: transform .05s ease, filter .15s ease, opacity .15s ease;
+      color: #061018;
+      background: linear-gradient(180deg, rgba(42,233,139,1), rgba(15,180,105,1));
+      box-shadow: 0 10px 22px rgba(42,233,139,.18);
+    }
+    button:active{ transform: translateY(1px); }
+    button.secondary{
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+    button.danger{
+      color: #19060b;
+      background: linear-gradient(180deg, #ff7a96, #ff3b67);
+      box-shadow: 0 10px 22px rgba(255,85,119,.18);
+    }
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      filter: grayscale(.2);
+    }
+
+    .fine{
+      font-size: 11px;
+      color: var(--muted);
+      text-align:center;
+      padding: 0 6px 14px;
+    }
+    .fine code{
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid var(--line);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="t">Crash</div>
+        <div class="s">Bet → multiplier rises → cash out before crash</div>
+      </div>
+      <div class="balance">
+        <div class="label">Balance</div>
+        <div class="val" id="bal">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage">
+        <div class="multibox">
+          <div class="multi" id="mult">1.00<small>x</small></div>
+          <div class="pill">
+            <span class="dot" id="dot"></span>
+            <span id="stateText">Ready</span>
+          </div>
+        </div>
+        <div class="msg" id="msg"></div>
+      </div>
+
+      <div class="controls">
+        <div class="row">
+          <div class="field">
+            <label>
+              <span>Bet</span>
+              <span id="betHint">min 1</span>
+            </label>
+            <input id="bet" inputmode="numeric" pattern="[0-9]*" value="10" />
+          </div>
+
+          <div class="field">
+            <label>
+              <span>Auto Cashout</span>
+              <span id="targetLabel">2.00x</span>
+            </label>
+            <input id="target" type="range" min="110" max="1000" step="5" value="200" />
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button id="btnStart">Start</button>
+          <button id="btnCash" class="secondary" disabled>Cash Out</button>
+        </div>
+      </div>
+
+      <div class="fine">
+        Uses your Telegram user id via <code>initDataUnsafe.user.id</code>. Balance is stored in your Worker.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    // MUST match your Cloudflare Worker base URL (no trailing endpoint, trailing slash is fine)
+    const API_BASE = "https://crash.ajresellss.workers.dev";
+
+    // ===== TELEGRAM CONTEXT =====
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      tg.setHeaderColor?.("#0b0f17");
+      tg.setBackgroundColor?.("#0b0f17");
+    }
+
+    const uid = tg?.initDataUnsafe?.user?.id || null;
+
+    // ===== UI =====
+    const elBal = document.getElementById("bal");
+    const elMult = document.getElementById("mult");
+    const elDot = document.getElementById("dot");
+    const elState = document.getElementById("stateText");
+    const elMsg = document.getElementById("msg");
+    const elBet = document.getElementById("bet");
+    const elTarget = document.getElementById("target");
+    const elTargetLabel = document.getElementById("targetLabel");
+    const btnStart = document.getElementById("btnStart");
+    const btnCash = document.getElementById("btnCash");
+
+    function fmt(n){
+      const x = Math.max(0, Math.floor(Number(n||0)));
+      return x.toLocaleString("en-GB");
+    }
+    function setStatus(kind, text){
+      elState.textContent = text;
+      elDot.classList.remove("live","down");
+      if (kind === "live") elDot.classList.add("live");
+      if (kind === "down") elDot.classList.add("down");
+    }
+    function setMsg(t){ elMsg.textContent = t || ""; }
+
+    function readBet(){
+      const v = String(elBet.value||"").replace(/[^\d]/g,"");
+      const bet = Math.max(1, parseInt(v || "0", 10));
+      elBet.value = String(bet);
+      return bet;
+    }
+
+    function readTarget(){
+      const t = parseInt(elTarget.value, 10); // 110..1000 means 1.10x..10.00x
+      const target = (t/100).toFixed(2);
+      elTargetLabel.textContent = `${target}x`;
+      return Number(target);
+    }
+
+    elTarget.addEventListener("input", readTarget);
+    readTarget();
+
+    // ===== WALLET API (expects your Worker to support /balance GET+POST) =====
+    async function apiGetBalance(){
+      if (!uid) throw new Error("No Telegram user id");
+      const r = await fetch(`${API_BASE.replace(/\/$/,"")}/balance?user_id=${encodeURIComponent(uid)}`, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+      });
+      if (!r.ok) throw new Error("balance_get_failed");
+      const j = await r.json();
+      return Number(j.balance ?? 0);
+    }
+
+    async function apiSetBalance(newBalance){
+      if (!uid) throw new Error("No Telegram user id");
+      const r = await fetch(`${API_BASE.replace(/\/$/,"")}/balance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept":"application/json" },
+        body: JSON.stringify({ user_id: Number(uid), balance: Math.floor(Number(newBalance||0)) }),
+      });
+      if (!r.ok) throw new Error("balance_set_failed");
+      const j = await r.json().catch(()=>({}));
+      return Number(j.balance ?? newBalance);
+    }
+
+    async function refreshBalance(){
+      try{
+        const b = await apiGetBalance();
+        elBal.textContent = fmt(b);
+        return b;
+      }catch(e){
+        elBal.textContent = "—";
+        setMsg("⚠️ Balance unavailable. Check Worker URL / CORS.");
+        throw e;
+      }
+    }
+
+    // ===== CRASH GAME (client-side simulation; wallet is real) =====
+    let running = false;
+    let crashed = false;
+    let startBal = 0;
+    let bet = 0;
+    let target = 2.00;
+    let current = 1.00;
+    let crashAt = 0;
+    let tickHandle = null;
+
+    function sampleCrashPoint(maxCap=150.0){
+      // simple “crash” distribution; not crypto-fair, but playable
+      const houseEdge = 0.03;
+      let u = Math.random();
+      u = Math.max(u, 1e-12);
+      let m = (1.0 - houseEdge) / u;
+      m = Math.max(1.01, Math.min(maxCap, Math.round(m*100)/100));
+      return m;
+    }
+
+    function renderMult(){
+      elMult.innerHTML = `${current.toFixed(2)}<small>x</small>`;
+    }
+
+    function stopLoop(){
+      if (tickHandle) cancelAnimationFrame(tickHandle);
+      tickHandle = null;
+    }
+
+    function loop(){
+      if (!running) return;
+
+      // increase speed a bit over time
+      const speed = current < 2 ? 0.008 : current < 5 ? 0.012 : 0.018;
+      current = Math.round((current + speed) * 100) / 100;
+
+      // crash?
+      if (current >= crashAt){
+        running = false;
+        crashed = true;
+        stopLoop();
+        setStatus("down", "Crashed");
+        renderMult();
+
+        setMsg(`💥 Crashed at ${crashAt.toFixed(2)}x. You lost ${fmt(bet)}.`);
+        btnStart.disabled = false;
+        btnCash.disabled = true;
+        elBet.disabled = false;
+        elTarget.disabled = false;
+        return;
+      }
+
+      // auto cashout?
+      if (current >= target){
+        cashOut(true);
+        return;
+      }
+
+      renderMult();
+      tickHandle = requestAnimationFrame(loop);
+    }
+
+    async function startGame(){
+      setMsg("");
+      if (!uid){
+        setMsg("❌ Open this inside Telegram (WebApp) so your user id is available.");
+        return;
+      }
+
+      bet = readBet();
+      target = readTarget();
+
+      // pull latest balance and deduct bet (write to Worker)
+      const b = await refreshBalance();
+      if (b < bet){
+        setMsg(`❌ Not enough balance. You have ${fmt(b)}.`);
+        return;
+      }
+
+      startBal = b;
+      const newBal = await apiSetBalance(b - bet);
+      elBal.textContent = fmt(newBal);
+
+      // init round
+      crashed = false;
+      running = true;
+      current = 1.00;
+      crashAt = sampleCrashPoint(150.0);
+
+      btnStart.disabled = true;
+      btnCash.disabled = false;
+      elBet.disabled = true;
+      elTarget.disabled = true;
+
+      setStatus("live", "Running");
+      renderMult();
+      setMsg(`Bet ${fmt(bet)} placed. Cash out before ${crashAt.toFixed(2)}x (hidden).`);
+
+      stopLoop();
+      tickHandle = requestAnimationFrame(loop);
+    }
+
+    async function cashOut(auto=false){
+      if (!running) return;
+
+      running = false;
+      stopLoop();
+
+      const mult = Math.max(1.00, current);
+      // profit model: bet * (mult - 1)
+      const profit = Math.floor(bet * (mult - 1));
+      const latest = await apiGetBalance(); // should be startBal-bet (unless changed elsewhere)
+      const newBal = await apiSetBalance(latest + bet + profit); // return stake + profit
+      elBal.textContent = fmt(newBal);
+
+      btnStart.disabled = false;
+      btnCash.disabled = true;
+      elBet.disabled = false;
+      elTarget.disabled = false;
+
+      setStatus(null, "Ready");
+      setMsg(`✅ Cashed out at ${mult.toFixed(2)}x. Profit ${fmt(profit)}. ${auto ? "(auto)" : ""}`);
+    }
+
+    btnStart.addEventListener("click", () => startGame().catch(e => setMsg("❌ Error starting round.")));
+    btnCash.addEventListener("click", () => cashOut(false).catch(e => setMsg("❌ Error cashing out.")));
+
+    // Initial
+    (async () => {
+      setStatus(null, "Ready");
+      renderMult();
+      if (!uid){
+        setMsg("Open inside Telegram to load your balance.");
+        return;
+      }
+      await refreshBalance();
+    })();
+  </script>
+</body>
+</html>
