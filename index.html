@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Mines</title>
+  <title>Crash</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{
@@ -11,445 +11,499 @@
       --panel: rgba(16,26,42,.72);
       --panel2: rgba(15,22,35,.70);
       --text:#e7eefc;
-      --muted:#8aa0c6;
-      --accent:#4fd1c5;
-      --bad:#ff5c7a;
-      --good:#7CFF8A;
-      --line: rgba(255,255,255,.08);
-      --shadow: 0 16px 60px rgba(0,0,0,.45);
+      --muted:#9bb0d6;
+      --line:rgba(255,255,255,.08);
+      --good:#2ae98b;
+      --bad:#ff5577;
+      --shadow: 0 14px 40px rgba(0,0,0,.45);
       --radius: 18px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(79,209,197,.22), transparent 60%),
-                  radial-gradient(900px 600px at 110% 10%, rgba(123,97,255,.18), transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 700px at 20% 0%, rgba(124,156,255,.22), transparent 60%),
+        radial-gradient(1000px 700px at 90% 10%, rgba(42,233,139,.14), transparent 55%),
+        linear-gradient(180deg, var(--bg), #060910 90%);
       color:var(--text);
+      padding: 18px 14px 26px;
     }
-    .wrap{max-width:980px;margin:0 auto;padding:18px 14px 28px}
-    .top{
-      display:flex;gap:12px;align-items:center;justify-content:space-between;
-      padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(16,26,42,.78), rgba(15,22,35,.62));
-      box-shadow:var(--shadow);
+    .wrap{max-width:540px;margin:0 auto}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 12px 14px;
+      border:1px solid var(--line);
+      background: var(--panel2);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
-    .brand{display:flex;flex-direction:column;gap:2px}
-    .brand .t{font-size:14px;letter-spacing:.4px;color:var(--muted)}
-    .brand .h{font-size:18px;font-weight:700}
-    .bal{
-      display:flex;flex-direction:column;align-items:flex-end;gap:2px
-    }
-    .bal .lbl{font-size:12px;color:var(--muted)}
-    .bal .val{font-size:22px;font-weight:800}
-    .grid{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: 320px 1fr;
-      gap:14px;
-    }
-    @media (max-width: 860px){
-      .grid{grid-template-columns: 1fr}
-    }
+    .brand{display:flex;flex-direction:column;gap:3px;line-height:1.1}
+    .brand .t{font-weight:900; letter-spacing:.2px; font-size:14px}
+    .brand .s{color:var(--muted); font-weight:800; font-size:12px}
+    .balance{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:140px}
+    .balance .label{font-size:11px;color:var(--muted);font-weight:900}
+    .balance .val{font-size:16px;font-weight:950}
     .card{
+      margin-top:14px;
       border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(16,26,42,.78), rgba(15,22,35,.62));
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    .card h3{margin:0 0 10px;font-size:14px;color:var(--muted);font-weight:700;letter-spacing:.3px}
-    .row{display:flex;gap:10px;align-items:center;margin:10px 0}
-    .row label{flex:0 0 86px;color:var(--muted);font-size:13px}
-    .inp, select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(10,14,22,.55);
-      color:var(--text);
-      outline:none;
-      font-size:14px;
-    }
-    .btn{
-      width:100%;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid rgba(79,209,197,.38);
-      background: linear-gradient(180deg, rgba(79,209,197,.20), rgba(79,209,197,.10));
-      color:var(--text);
-      font-weight:800;
-      letter-spacing:.2px;
-      cursor:pointer;
-      transition: transform .08s ease, filter .18s ease, opacity .18s ease;
-    }
-    .btn:active{transform: translateY(1px)}
-    .btn.secondary{
-      border-color: rgba(255,255,255,.14);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
-      font-weight:700;
-    }
-    .btn.danger{
-      border-color: rgba(255,92,122,.42);
-      background: linear-gradient(180deg, rgba(255,92,122,.20), rgba(255,92,122,.10));
-    }
-    .btn[disabled]{opacity:.45;cursor:not-allowed;filter:saturate(.6)}
-    .stat{
-      display:flex;justify-content:space-between;gap:10px;
-      padding:10px 12px;border:1px solid var(--line);border-radius:14px;
-      background:rgba(10,14,22,.45);
-      margin-top:10px;
-      font-size:13px;color:var(--muted)
-    }
-    .stat b{color:var(--text)}
-    /* Board */
-    .board{
-      display:flex;flex-direction:column;gap:12px;
-    }
-    .tiles{
-      display:grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap:10px;
-      padding:10px;
-      border-radius:var(--radius);
-      border:1px solid var(--line);
-      background:rgba(10,14,22,.40);
-      min-height: 360px;
-    }
-    .tile{
-      position:relative;
-      aspect-ratio: 1/1;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: 0 10px 28px rgba(0,0,0,.35);
-      cursor:pointer;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       overflow:hidden;
-      transform-style:preserve-3d;
-      transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .18s ease, opacity .18s ease;
     }
-    .tile:hover{filter:brightness(1.08)}
-    .tile[disabled]{cursor:not-allowed;opacity:.55;filter:saturate(.7)}
-    .tile .face{
-      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      backface-visibility:hidden;
-      font-size:24px;font-weight:900;
+    .stage{padding:16px 14px 14px;border-bottom:1px solid var(--line)}
+    .multibox{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+    .multi{
+      font-size:56px;
+      font-weight:950;
+      letter-spacing:-1px;
+      line-height:1;
     }
-    .tile .front{color:rgba(255,255,255,.18)}
-    .tile .back{transform: rotateY(180deg)}
-    .tile.revealed{transform: rotateY(180deg)}
-    .tile.safe .back{
-      background: radial-gradient(80% 80% at 30% 20%, rgba(124,255,138,.26), rgba(0,0,0,0) 60%),
-                  linear-gradient(180deg, rgba(124,255,138,.12), rgba(124,255,138,.06));
-      border-radius:16px;
-      color:var(--good);
+    .multi small{font-size:18px;font-weight:900;color:var(--muted);margin-left:4px}
+    .pill{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      white-space:nowrap;
     }
-    .tile.mine .back{
-      background: radial-gradient(80% 80% at 30% 20%, rgba(255,92,122,.26), rgba(0,0,0,0) 60%),
-                  linear-gradient(180deg, rgba(255,92,122,.12), rgba(255,92,122,.06));
-      border-radius:16px;
-      color:var(--bad);
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 3px rgba(155,176,214,.12);
     }
-    .toast{
+    .dot.live{background: var(--good); box-shadow: 0 0 0 3px rgba(42,233,139,.14);}
+    .dot.down{background: var(--bad); box-shadow: 0 0 0 3px rgba(255,85,119,.14);}
+    .msg{
       margin-top:10px;
       font-size:13px;
-      color:var(--muted);
-      min-height:18px;
+      color: var(--muted);
+      line-height:1.35;
+      min-height: 18px;
+    }
+    .controls{padding:14px;display:grid;gap:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size: 11px;
+      color: var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-weight: 950;
+    }
+    .field input{
+      width:100%;
+      border:0;
+      outline:0;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 950;
+    }
+    .field input[type="range"]{height:26px}
+    .quick{
+      display:grid;
+      grid-template-columns: repeat(5,1fr);
+      gap:8px;
+      margin-top: 10px;
+    }
+    .chip{
+      padding:10px 8px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      font-weight: 950;
+      cursor:pointer;
+    }
+    .chip:active{transform:translateY(1px)}
+    .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 13px 12px;
+      font-weight: 950;
+      letter-spacing: .2px;
+      cursor:pointer;
+      transition: transform .05s ease, filter .15s ease, opacity .15s ease;
+      color: #061018;
+      background: linear-gradient(180deg, rgba(42,233,139,1), rgba(15,180,105,1));
+      box-shadow: 0 10px 22px rgba(42,233,139,.18);
+    }
+    button:active{ transform: translateY(1px); }
+    button.secondary{
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+    button:disabled{opacity:.45; cursor:not-allowed; filter: grayscale(.2);}
+    .fine{
+      font-size: 11px;
+      color: var(--muted);
+      text-align:center;
+      padding: 0 10px 14px;
+    }
+    .fine code{
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid var(--line);
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
+    <div class="topbar">
       <div class="brand">
-        <div class="t">Mini Casino</div>
-        <div class="h">Mines 💣</div>
+        <div class="t">Crash</div>
+        <div class="s">Multiplier rises — cash out before it crashes</div>
       </div>
-      <div class="bal">
-        <div class="lbl">Balance</div>
-        <div class="val" id="balance">£0</div>
+      <div class="balance">
+        <div class="label">Balance</div>
+        <div class="val" id="bal">—</div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Bet</h3>
-
-        <div class="row">
-          <label>Amount</label>
-          <input class="inp" id="bet" type="number" min="1" step="1" value="10" />
+    <div class="card">
+      <div class="stage">
+        <div class="multibox">
+          <div class="multi" id="mult">1.00<small>x</small></div>
+          <div class="pill">
+            <span class="dot" id="dot"></span>
+            <span id="stateText">Connecting…</span>
+          </div>
         </div>
-
-        <div class="row">
-          <label>Mines</label>
-          <select id="mines">
-            <option value="1">1 mine</option>
-            <option value="3" selected>3 mines</option>
-            <option value="5">5 mines</option>
-            <option value="10">10 mines</option>
-          </select>
-        </div>
-
-        <button class="btn" id="startBtn">Start Round</button>
-
-        <div class="stat">
-          <div>Multiplier: <b id="mult">1.00x</b></div>
-          <div>Cashout: <b id="cashout">£0</b></div>
-        </div>
-
-        <div class="row" style="margin-top:12px;">
-          <button class="btn secondary" id="cashoutBtn" disabled>Cash Out</button>
-        </div>
-
-        <div class="toast" id="toast"></div>
+        <div class="msg" id="msg"></div>
       </div>
 
-      <div class="card board">
-        <h3>Board</h3>
-        <div class="tiles" id="tiles"></div>
+      <div class="controls">
+        <div class="row">
+          <div class="field">
+            <label>
+              <span>Bet</span>
+              <span id="betHint">min 1</span>
+            </label>
+            <input id="bet" inputmode="numeric" pattern="[0-9]*" value="10" />
+            <div class="quick">
+              <button class="chip" id="b10" type="button">+10</button>
+              <button class="chip" id="b100" type="button">+100</button>
+              <button class="chip" id="half" type="button">½</button>
+              <button class="chip" id="dbl" type="button">2×</button>
+              <button class="chip" id="max" type="button">Max</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>
+              <span>Auto cashout</span>
+              <span id="targetLabel">2.00x</span>
+            </label>
+            <input id="target" type="range" min="110" max="1000" step="5" value="200" />
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button id="btnStart" type="button">Start</button>
+          <button id="btnCash" class="secondary" type="button" disabled>Cash Out</button>
+        </div>
+      </div>
+
+      <div class="fine">
+        Balance sync: Web polls <code>/api/state</code>. Bot uses <code>/bot/*</code> endpoints.
       </div>
     </div>
   </div>
 
 <script>
-  const API_BASE = "https://crash.ajresellss.workers.dev";
+  const API_BASE = "https://crash.ajresellss.workers.dev"; // CHANGE if needed
 
   const tg = window.Telegram?.WebApp;
-  tg?.ready?.();
-
-  function initData() {
-    return tg?.initData || "";
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor?.("#0b0f17");
+    tg.setBackgroundColor?.("#0b0f17");
   }
 
-  async function api(path, method="GET", body=null) {
-    const headers = { "Content-Type": "application/json" };
-    if (initData()) headers["x-initdata"] = initData();
+  const elBal = document.getElementById("bal");
+  const elMult = document.getElementById("mult");
+  const elDot = document.getElementById("dot");
+  const elState = document.getElementById("stateText");
+  const elMsg = document.getElementById("msg");
+  const elBet = document.getElementById("bet");
+  const elTarget = document.getElementById("target");
+  const elTargetLabel = document.getElementById("targetLabel");
+  const elBetHint = document.getElementById("betHint");
+  const btnStart = document.getElementById("btnStart");
+  const btnCash = document.getElementById("btnCash");
 
-    const res = await fetch(API_BASE + path, {
-      method,
-      headers,
+  const b10 = document.getElementById("b10");
+  const b100 = document.getElementById("b100");
+  const half = document.getElementById("half");
+  const dbl = document.getElementById("dbl");
+  const max = document.getElementById("max");
+
+  function fmt(n){
+    const x = Math.max(0, Math.floor(Number(n||0)));
+    return x.toLocaleString("en-GB");
+  }
+  function setMsg(t){ elMsg.textContent = t || ""; }
+  function setStatus(kind, text){
+    elState.textContent = text;
+    elDot.classList.remove("live","down");
+    if (kind === "live") elDot.classList.add("live");
+    if (kind === "down") elDot.classList.add("down");
+  }
+  function renderMult(v){
+    elMult.innerHTML = `${Number(v).toFixed(2)}<small>x</small>`;
+  }
+
+  function base(){ return API_BASE.replace(/\/$/,""); }
+
+  async function api(path, body){
+    const initData = tg?.initData || "";
+    const r = await fetch(base()+path, {
+      method: body ? "POST" : "GET",
+      headers: {
+        "Accept":"application/json",
+        "Content-Type":"application/json",
+        "x-initdata": initData
+      },
       body: body ? JSON.stringify(body) : null
     });
-
-    const txt = await res.text();
-    let data;
-    try { data = JSON.parse(txt); } catch { data = { error: txt || "Bad response" }; }
-
-    if (!res.ok) throw new Error(data?.error || ("HTTP " + res.status));
-    return data;
+    const j = await r.json().catch(()=> ({}));
+    if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
   }
 
-  const elBal = document.getElementById("balance");
-  const elBet = document.getElementById("bet");
-  const elMines = document.getElementById("mines");
-  const elStart = document.getElementById("startBtn");
-  const elCash = document.getElementById("cashoutBtn");
-  const elMult = document.getElementById("mult");
-  const elCashout = document.getElementById("cashout");
-  const elToast = document.getElementById("toast");
-  const tilesWrap = document.getElementById("tiles");
+  function readBet(){
+    const v = String(elBet.value||"").replace(/[^\d]/g,"");
+    let bet = Math.max(1, parseInt(v || "0", 10));
+    elBet.value = String(bet);
+    return bet;
+  }
+  function readTarget(){
+    const t = parseInt(elTarget.value, 10);
+    const target = (t/100).toFixed(2);
+    elTargetLabel.textContent = `${target}x`;
+    return Number(target);
+  }
+  elTarget.addEventListener("input", readTarget);
+  readTarget();
 
+  let balance = 0;
   let roundId = null;
-  let active = false;
-  let revealed = new Set();
-  let lastMines = 3;
 
-  function money(n){ return "£" + (Number(n)||0).toLocaleString("en-GB"); }
-  function setToast(msg){ elToast.textContent = msg || ""; }
-
-  function buildTiles() {
-    tilesWrap.innerHTML = "";
-    revealed = new Set();
-    for (let i=0;i<25;i++){
-      const b = document.createElement("button");
-      b.className = "tile";
-      b.dataset.index = String(i);
-      b.innerHTML = `
-        <div class="face front">◆</div>
-        <div class="face back"></div>
-      `;
-      b.addEventListener("click", () => onTile(i, b));
-      tilesWrap.appendChild(b);
-    }
-    setTilesEnabled(false);
+  async function refreshBalance(){
+    const st = await api("/api/state");
+    balance = Number(st.balance || 0);
+    elBal.textContent = fmt(balance);
+    elBetHint.textContent = `max ${fmt(balance)}`;
   }
 
-  function setTilesEnabled(on){
-    tilesWrap.querySelectorAll(".tile").forEach(t=>{
-      t.disabled = !on;
-    });
+  // Poll balance for "real-time" sync while this webapp is open
+  setInterval(() => {
+    if (!tg?.initData) return;
+    refreshBalance().catch(()=>{});
+  }, 2000);
+
+
+  // Server-side crash watcher: stops the animation the instant the round crashes (no need to click cashout)
+  let crashPoll = null;
+  function stopCrashWatch(){
+    if (crashPoll) clearInterval(crashPoll);
+    crashPoll = null;
   }
-
-  function setStats(mult, cash){
-    elMult.textContent = (Number(mult)||1).toFixed(2) + "x";
-    elCashout.textContent = money(cash || 0);
-  }
-
-  async function refreshState(){
-    try{
-      const s = await api("/api/mines/state", "GET");
-      elBal.textContent = money(s.balance);
-
-      if (!s.active){
-        if (active) {
-          // round ended elsewhere (rare)
-          endRoundUI();
+  function startCrashWatch(){
+    stopCrashWatch();
+    crashPoll = setInterval(async () => {
+      if (!roundId || !running) return;
+      try{
+        const st = await api(`/api/crash/check?round_id=${encodeURIComponent(roundId)}`);
+        if (st.state === "crashed" || st.state === "settled"){
+          // round is over (loss)
+          running = false;
+          stopAnim();
+          stopCrashWatch();
+          setInRound(false);
+          btnCash.disabled = true;
+          const c = Number(st.crash_at || 0);
+          if (c > 0) renderMult(c);
+          setStatus("down", "Crashed");
+          setMsg(`💥 Crashed at ${c ? c.toFixed(2) : "?"}x — you lost.`);
+          roundId = null;
+          // refresh balance after a moment (best effort)
+          refreshBalance().catch(()=>{});
         }
+      }catch{
+        // ignore transient errors
+      }
+    }, 250);
+  }
+
+  // Visual-only animation
+  let running = false;
+  let raf = null;
+  let t0 = 0;
+  let visual = 1.00;
+
+  function visualMult(ms){
+    const t = ms / 1000;
+    return 1 + (t * 0.38) + (t*t * 0.028);
+  }
+  function stopAnim(){
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+  }
+  function tick(){
+    if (!running) return;
+    const ms = performance.now() - t0;
+    visual = Math.round(visualMult(ms) * 100) / 100;
+    renderMult(visual);
+
+    const target = readTarget();
+    if (target >= 1.01 && visual >= target) {
+      doCashout(true);
+      return;
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function setInRound(inRound){
+    btnCash.disabled = !inRound;
+    btnStart.disabled = inRound;
+    elBet.disabled = inRound;
+    elTarget.disabled = inRound;
+    b10.disabled = inRound;
+    b100.disabled = inRound;
+    half.disabled = inRound;
+    dbl.disabled = inRound;
+    max.disabled = inRound;
+  }
+
+  async function doStart(){
+    try{
+      if (!tg?.initData){
+        setStatus("down", "Not in Telegram");
+        setMsg("Open Crash from the bot button inside Telegram.");
         return;
       }
-      // active round
-      active = true;
-      roundId = s.round_id;
-      lastMines = s.mines;
-      setTilesEnabled(true);
-      elCash.disabled = false;
-      elStart.disabled = true;
-      elBet.disabled = true;
-      elMines.disabled = true;
 
-      // apply revealed
-      const r = new Set(s.revealed || []);
-      if (r.size !== revealed.size){
-        // update UI only for newly revealed tiles
-        (s.revealed || []).forEach(i=>{
-          if (!revealed.has(i)){
-            const btn = tilesWrap.querySelector(`.tile[data-index="${i}"]`);
-            if (btn) revealSafe(btn);
-            revealed.add(i);
-          }
-        });
+      await refreshBalance();
+      const bet = readBet();
+      if (bet > balance){
+        setStatus("down", "Insufficient");
+        setMsg(`Not enough balance. You have ${fmt(balance)}.`);
+        return;
       }
 
-      setStats(s.cashout_mult, s.cashout_value);
-    } catch(e){
-      setToast("⚠️ " + e.message);
-    }
-  }
-
-  function revealSafe(btn){
-    btn.classList.add("revealed","safe");
-    btn.querySelector(".back").textContent = "⭐";
-    btn.disabled = true;
-  }
-  function revealMine(btn){
-    btn.classList.add("revealed","mine");
-    btn.querySelector(".back").textContent = "💣";
-    btn.disabled = true;
-  }
-
-  function endRoundUI(){
-    active = false;
-    roundId = null;
-    elStart.disabled = false;
-    elBet.disabled = false;
-    elMines.disabled = false;
-    elCash.disabled = true;
-    setTilesEnabled(false);
-  }
-
-  async function startRound(){
-    const bet = Math.floor(Number(elBet.value || 0));
-    const mines = Math.floor(Number(elMines.value || 0));
-    try{
-      setToast("");
-      const r = await api("/api/mines/start","POST",{ bet, mines });
-      elBal.textContent = money(r.balance);
+      setStatus(null, "Starting…");
+      const r = await api("/api/crash/start", { bet });
       roundId = r.round_id;
-      active = true;
-      lastMines = mines;
+      balance = Number(r.balance || 0);
+      elBal.textContent = fmt(balance);
 
-      // reset board
-      buildTiles();
-      setTilesEnabled(true);
-      elCash.disabled = false;
-      elStart.disabled = true;
-      elBet.disabled = true;
-      elMines.disabled = true;
-
-      setStats(r.cashout_mult, r.cashout_value);
-      setToast("Pick a tile…");
+      setInRound(true);
+      setStatus("live", "Running");
+      setMsg("Running… cash out anytime.");
+      running = true;
+      visual = 1.00;
+      renderMult(visual);
+      t0 = performance.now();
+      stopAnim();
+      raf = requestAnimationFrame(tick);
+      startCrashWatch();
     }catch(e){
-      setToast("❌ " + e.message);
+      setStatus("down", "Error");
+      setMsg("Start failed: " + (e?.message || "unknown"));
+      setInRound(false);
+      running = false;
+      stopAnim();
+      stopCrashWatch();
+      stopCrashWatch();
     }
   }
 
-  async function onTile(i, btn){
-    if (!active || !roundId) return;
-    if (revealed.has(i)) return;
-
-    // prevent double clicks while request in flight
-    setTilesEnabled(false);
-
+  async function doCashout(auto=false){
+    if (!roundId) return;
     try{
-      const r = await api("/api/mines/reveal","POST",{ round_id: roundId, index: i });
-      elBal.textContent = money(r.balance);
+      setStatus(null, "Cashing out…");
+      running = false;
+      stopAnim();
+      stopCrashWatch();
+      setInRound(false);
 
-      if (r.outcome === "lose"){
-        revealMine(btn);
-        // reveal all mines
-        (r.mines || []).forEach(idx=>{
-          const b = tilesWrap.querySelector(`.tile[data-index="${idx}"]`);
-          if (b && !b.classList.contains("revealed")) revealMine(b);
-        });
-        setToast(`💥 Crashed! You hit a mine.`);
-        endRoundUI();
-        setStats(1.0, 0);
-        return;
-      }
+      const r = await api("/api/crash/cashout", { round_id: roundId });
+      balance = Number(r.balance || 0);
+      elBal.textContent = fmt(balance);
 
       if (r.outcome === "win"){
-        // auto cashout (all safe)
-        revealSafe(btn);
-        (r.mines || []).forEach(idx=>{
-          const b = tilesWrap.querySelector(\`.tile[data-index="\${idx}"]\`);
-          if (b && !b.classList.contains("revealed")) revealMine(b);
-        });
-        setToast(`✅ Auto cashout: +${money(r.profit)} (${Number(r.cashout_mult).toFixed(2)}x)`);
-        setStats(r.cashout_mult, r.payout);
-        endRoundUI();
-        return;
+        const m = Number(r.cashout_mult || visual || 1.00);
+        renderMult(m);
+        setStatus(null, "Ready");
+        setMsg(`✅ Cashed out at ${m.toFixed(2)}x${auto ? " (auto)" : ""}. Profit +${fmt(r.profit || 0)}.`);
+      } else {
+        const c = Number(r.crash_at || 0);
+        if (c > 0) renderMult(c);
+        setStatus("down", "Crashed");
+        setMsg(`💥 Crashed at ${c ? c.toFixed(2) : "?"}x — you lost.`);
       }
 
-      // safe
-      revealSafe(btn);
-      revealed.add(i);
-      setStats(r.cashout_mult, r.cashout_value);
-      setToast("✅ Safe. Cash out any time.");
-      setTilesEnabled(true);
+      roundId = null;
+
+      // notify bot instantly (best-effort)
+      try{
+        tg.sendData(JSON.stringify({ type: "balance_update", balance }));
+      }catch{}
     }catch(e){
-      setToast("❌ " + e.message);
-      setTilesEnabled(true);
+      setStatus("down", "Error");
+      setMsg("Cashout failed: " + (e?.message || "unknown"));
     }
   }
 
-  async function cashout(){
-    if (!active || !roundId) return;
+  b10.onclick  = () => { elBet.value = String((parseInt(elBet.value||"0",10)||0) + 10); readBet(); };
+  b100.onclick = () => { elBet.value = String((parseInt(elBet.value||"0",10)||0) + 100); readBet(); };
+  half.onclick = () => { elBet.value = String(Math.max(1, Math.floor((parseInt(elBet.value||"0",10)||1)/2))); readBet(); };
+  dbl.onclick  = () => { elBet.value = String(Math.max(1, (parseInt(elBet.value||"0",10)||1)*2)); readBet(); };
+  max.onclick  = () => { elBet.value = String(Math.max(1, balance)); readBet(); };
+
+  btnStart.addEventListener("click", doStart);
+  btnCash.addEventListener("click", () => doCashout(false));
+  elBet.addEventListener("blur", readBet);
+
+  (async () => {
+    renderMult(1.00);
+    setStatus(null, "Connecting…");
+    setInRound(false);
+
     try{
-      setToast("");
-      const r = await api("/api/mines/cashout","POST",{ round_id: roundId });
-      elBal.textContent = money(r.balance);
-
-      // reveal mines for drama
-      (r.mines || []).forEach(idx=>{
-        const b = tilesWrap.querySelector(\`.tile[data-index="\${idx}"]\`);
-        if (b && !b.classList.contains("revealed")) revealMine(b);
-      });
-
-      setToast(`✅ Cashed out: +${money(r.profit)} (${Number(r.cashout_mult).toFixed(2)}x)`);
-      setStats(r.cashout_mult, r.payout);
-      endRoundUI();
-    }catch(e){
-      setToast("❌ " + e.message);
+      await refreshBalance();
+      setStatus(null, "Ready");
+    }catch{
+      setStatus("down", "Offline");
+      setMsg("⚠️ Balance unavailable. Check Worker URL / CORS / KV binding.");
     }
-  }
-
-  elStart.addEventListener("click", startRound);
-  elCash.addEventListener("click", cashout);
-
-  buildTiles();
-  refreshState();
-  setInterval(refreshState, 2000);
+  })();
 </script>
 </body>
 </html>
