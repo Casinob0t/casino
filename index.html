@@ -327,6 +327,40 @@
     refreshBalance().catch(()=>{});
   }, 2000);
 
+
+  // Server-side crash watcher: stops the animation the instant the round crashes (no need to click cashout)
+  let crashPoll = null;
+  function stopCrashWatch(){
+    if (crashPoll) clearInterval(crashPoll);
+    crashPoll = null;
+  }
+  function startCrashWatch(){
+    stopCrashWatch();
+    crashPoll = setInterval(async () => {
+      if (!roundId || !running) return;
+      try{
+        const st = await api(`/api/crash/check?round_id=${encodeURIComponent(roundId)}`);
+        if (st.state === "crashed" || st.state === "settled"){
+          // round is over (loss)
+          running = false;
+          stopAnim();
+          stopCrashWatch();
+          setInRound(false);
+          btnCash.disabled = true;
+          const c = Number(st.crash_at || 0);
+          if (c > 0) renderMult(c);
+          setStatus("down", "Crashed");
+          setMsg(`💥 Crashed at ${c ? c.toFixed(2) : "?"}x — you lost.`);
+          roundId = null;
+          // refresh balance after a moment (best effort)
+          refreshBalance().catch(()=>{});
+        }
+      }catch{
+        // ignore transient errors
+      }
+    }, 250);
+  }
+
   // Visual-only animation
   let running = false;
   let raf = null;
@@ -398,12 +432,15 @@
       t0 = performance.now();
       stopAnim();
       raf = requestAnimationFrame(tick);
+      startCrashWatch();
     }catch(e){
       setStatus("down", "Error");
       setMsg("Start failed: " + (e?.message || "unknown"));
       setInRound(false);
       running = false;
       stopAnim();
+      stopCrashWatch();
+      stopCrashWatch();
     }
   }
 
@@ -413,6 +450,7 @@
       setStatus(null, "Cashing out…");
       running = false;
       stopAnim();
+      stopCrashWatch();
       setInRound(false);
 
       const r = await api("/api/crash/cashout", { round_id: roundId });
